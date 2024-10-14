@@ -43,7 +43,6 @@ async def create_user(name : Annotated[str, Form()],
     if existing_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail= "User already exists")
 
-
     if not password or password == "":
         password = "Bhumi@123"
     

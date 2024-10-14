@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     access_token_expire_days: int
     aes_key : str
     iv : str
+    client_secret : str
+    firebase_storage_bucket_name : str
 
 
     class Config:

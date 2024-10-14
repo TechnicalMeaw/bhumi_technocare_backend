@@ -2,6 +2,9 @@ import enum
 from sqlalchemy import Column, Enum, Integer, String, Boolean, TIMESTAMP, TextClause, ForeignKey, text
 from .database import Base
 from sqlalchemy.orm import relationship
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
+
 
 
 
@@ -82,3 +85,14 @@ class Complaint(Base):
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_resolved = Column(Boolean, nullable = False, server_default = text("False"))
+
+
+class UserSessions(Base):
+    __tablename__ = "user_sessions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), index= True, nullable = False)
+    device_id = Column(String, nullable = False, unique= True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+    is_active = Column(Boolean, nullable = False, server_default = text("True"))
+
+
