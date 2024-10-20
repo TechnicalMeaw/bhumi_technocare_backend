@@ -24,7 +24,7 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
     existing_session = db.query(models.UserSessions).filter(models.UserSessions.user_id == user.id).first()
 
     if not existing_session:
-        new_session = models.UserSessions(user_id = user.id)
+        new_session = models.UserSessions(user_id = user.id, device_id = user_credentials.client_id)
         db.add(new_session)
         db.commit()
     elif existing_session.is_active:
