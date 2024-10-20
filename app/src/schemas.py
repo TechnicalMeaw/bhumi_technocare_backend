@@ -22,7 +22,7 @@ class PaginationResponseModel(BaseModel):
 # User Response
 class UserQuickDetailResponseModel(BaseModel):
     name : str
-    photo : str
+    photo : str | None
 
 # For token verification
 class TokenData(BaseModel):
