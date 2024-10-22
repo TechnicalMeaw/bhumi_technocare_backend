@@ -31,18 +31,32 @@ class User(Base):
     last_login = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("Now()"))
     is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+class Area(Base):
+    __tablename__ = "area"
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    name = Column(String, nullable = False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+    is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+class City(Base):
+    __tablename__ = "city"
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    name = Column(String, nullable = False)
+    area = Column(Integer, ForeignKey(Area.id, ondelete="CASCADE"), nullable = False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+    is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
 class Firm(Base):
     __tablename__ = "firms"
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(String, nullable = False)
-    area = Column(String, nullable = False)
+    area = Column(Integer, ForeignKey(Area.id, ondelete="CASCADE"), nullable = True)
+    city = Column(Integer, ForeignKey(City.id, ondelete="CASCADE"), nullable = True)
+    contact_person = Column(String, nullable = True)
     address = Column(String, nullable = False)
-    depertment = Column(String, nullable = False)
-    billing_type = Column(String, nullable = False)
-    contact_person = Column(String, nullable = False)
-    contact_no = Column(String, nullable = False)
+    contact_no = Column(String, nullable = True)
+    pincode = Column(String, nullable = True)
+    gst_no = Column(String, nullable = True)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
@@ -53,10 +67,11 @@ class Firm(Base):
 class Customer(Base):
     __tablename__ = "customers"
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    firm_id = Column(Integer, ForeignKey(Firm.id, ondelete="CASCADE"), nullable = False)
+    firm_id = Column(Integer, ForeignKey(Firm.id, ondelete="CASCADE"), nullable = True)
     name = Column(String, nullable = False)
     contact_no = Column(String, nullable = False)
-    depertment = Column(String, nullable = False)
+    depertment = Column(String, nullable = True)
+    address = Column(String, nullable = False)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
@@ -75,12 +90,26 @@ class Asset(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+class ProductType(Base):
+    __tablename__ = "product_type"
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    name = Column(String, nullable = False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+    is_active = Column(Boolean, nullable = False, server_default = text("True"))
+
 
 class Complaint(Base):
     __tablename__ = "complaints"
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    contact_no = Column(String, nullable = False)
-    asset_id = Column(String, ForeignKey(Asset.id, ondelete="CASCADE"), nullable = False)
+    firm_id = Column(Integer, ForeignKey(Firm.id, ondelete="CASCADE"), nullable = True)
+    customer_id = Column(Integer, ForeignKey(Customer.id, ondelete="CASCADE"), nullable = False)
+    product_type_id = Column(Integer, ForeignKey(ProductType.id, ondelete="CASCADE"), nullable = False)
+    enginner_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
+    due_date = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+    service_type = Column(String, nullable = False)
+
+    # contact_no = Column(String, nullable = False)
+    asset_id = Column(String, ForeignKey(Asset.id, ondelete="CASCADE"), nullable = True)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))

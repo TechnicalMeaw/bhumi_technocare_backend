@@ -72,3 +72,23 @@ class AllEngineerResponseModel(CommonResponseModel, PaginationResponseModel):
 
 class EngineerResponseModel(CommonResponseModel):
     data: EngineerModel
+
+
+# Area
+# Request Model
+class CreateAreaRequestModel(BaseModel):
+    name : str
+
+# Response Model
+class AreaResponseModel(BaseModel):
+    id : int
+    name : str
+
+class AllAreaResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[AreaResponseModel]
+
+# City
+# Request Model
+class CreateCityRequestModel(BaseModel):
+    name: str
+    area_id : int
