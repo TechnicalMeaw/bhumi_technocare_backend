@@ -22,7 +22,7 @@ async def create_complaint(
                         product_type_id : Annotated[int, Form()],
                         enginner_id : Annotated[int, Form()],
                         due_date : Annotated[datetime, Form()],     # 'due_date': '2024-10-20T23:59:59'  # Format for datetime
-                        service_type : Annotated[str, Form()],
+                        service_type_id : Annotated[int, Form()],
                         firm_id : Optional[int] = Form(None),
                         asset_id : Optional[int] = Form(None),
                         remarks : Optional[str] = Form(None),
@@ -35,23 +35,28 @@ async def create_complaint(
     if current_user.role != 2:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
     
-    customer = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+    customer = db.query(models.Customer).filter(models.Customer.id == customer_id, models.Customer.is_active == True).first()
     if not customer:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid customer id")
     
-    product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id).first()
+    product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id, models.ProductType.is_active == True).first()
     if not product_type:
         raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid product type")
     
-    engineer = db.query(models.User).filter(models.User.role != 2, models.User.id == enginner_id).first()
+    engineer = db.query(models.User).filter(models.User.role != 2, models.User.id == enginner_id, models.User.is_active == True).first()
     if not engineer:
         raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid engineer id")
+    
+    service_type = db.query(models.ServiceType).filter(models.ServiceType.id == service_type_id, models.ServiceType.is_active == True).first()
+    if not service_type:
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid service type")
+
     
     new_complaint = models.Complaint(customer_id = customer_id,
                                       product_type_id = product_type_id, 
                                       enginner_id = enginner_id, 
                                       due_date = due_date,
-                                      service_type = service_type, 
+                                      service_type_id = service_type.id, 
                                       remarks = remarks)
     
     # Optional
@@ -231,6 +236,60 @@ async def add_product_type( body : schemas.CreateAreaRequestModel,
     db.commit()
     
     return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
+
+
+@router.post("/add_service_type", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
+async def add_service_type( body : schemas.CreateAreaRequestModel,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+    
+    new_product_type = models.ServiceType(name = body.name)
+    db.add(new_product_type)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
+
+
+@router.get("/service_types", response_model = schemas.AllAreaResponseModel)
+async def get_service_type(is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
+                    current_user : models.User = Depends(oauth2.get_current_user)):
+    
+    query = db.query(models.ServiceType).filter(cast(models.ServiceType.name, String).ilike(f'%{search}%')).order_by(models.ServiceType.created_at.desc())
+    if is_active is not None:
+        query = query.filter(models.ServiceType.is_active == is_active)
+
+    total_service_type = query.count()
+
+    # By default the limit is `None`
+    # If limit is positive -> set the limit
+    if limit and limit > 0:
+        query.limit(limit)
+
+    # By default pagination is not implemented
+    # So the total page count will be -> `1``
+    total_page = 1
+
+    # If page number is provided and is positive
+    # Means pagination is requested ---->
+    # If limit is not provided, then set it to -> `10`
+    # Else take the provided limit ----> Calculate the total page accordingly
+    if page and page > 0:
+        offset = (page - 1) * (limit if limit and limit > 0 else 10)
+        query.limit(offset)
+
+        total_page = math.ceil(total_service_type/(limit if limit and limit > 0 else 10))
+
+    return {"status": "success", "statusCode": 200, "message" : "Successfully got service types", 
+            "total_count": total_service_type,
+            "current_page": page,
+            "total_page": total_page,
+            "prev_page": page-1 if page and page > 1 else None, 
+            "next_page": page+1 if page and page < total_page else None,
+            "data": query.all()}
 
 
 @router.get("/product_types", response_model = schemas.AllAreaResponseModel)
@@ -422,6 +481,97 @@ async def get_customers(organization_id : Optional[int] = None, is_active : Opti
 
     return {"status": "success", "statusCode": 200, "message" : "Successfully got customers", 
             "total_count": total_customer,
+            "current_page": page,
+            "total_page": total_page,
+            "prev_page": page-1 if page and page > 1 else None, 
+            "next_page": page+1 if page and page < total_page else None,
+            "data": query.all()}
+
+
+
+@router.get("/complaints")
+async def get_complaints(organization_id : Optional[int] = None, 
+                         customer_id : Optional [int] = None,
+                         engineer_id : Optional[int] = None,
+
+                         service_type_id : Optional[int] = None,
+                         product_type_id : Optional[int] = None,
+
+                         is_resolved : Optional[bool] = None,
+                         is_overdue : Optional[bool] = None,
+
+                         page : Optional[int] = 1, 
+                         limit : Optional[int] = 10, 
+                         search : Optional[str] = "", 
+                         db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
+    
+    query = (
+        db.query(models.Complaint)
+        .join(models.Complaint.organization)
+        .join(models.Complaint.customer)
+        .join(models.Complaint.engineer)
+        # .join(models.Complaint.bill)  
+        .join(models.Complaint.service_type)  
+        .join(models.Complaint.product_type)
+        .filter(
+            or_(
+                cast(models.Complaint.id, String).ilike(f'%{search}%'), # Complaint id
+                cast(models.Complaint.organization.name, String).ilike(f'%{search}%'), # Organization name
+                cast(models.Complaint.organization.city_name, String).ilike(f'%{search}%'), # Organization City
+                cast(models.Complaint.organization.area_name, String).ilike(f'%{search}%'), # Organization Area
+                cast(models.Complaint.organization.address, String).ilike(f'%{search}%'), # Organization Address
+
+                cast(models.Complaint.customer.name, String).ilike(f'%{search}%'), # Customer name
+                cast(models.Complaint.customer.address, String).ilike(f'%{search}%'), # Customer City
+                cast(models.Complaint.customer.contact_no, String).ilike(f'%{search}%'), # Customer Contact No.
+
+                cast(models.Complaint.engineer.name, String).ilike(f'%{search}%'), # Engineer name
+                cast(models.Complaint.engineer.phone_no, String).ilike(f'%{search}%'), # Engineer phone no
+
+                # cast(models.Complaint.bill.bill_number, String).ilike(f'%{search}%'),  
+                cast(models.Complaint.service_type.name, String).ilike(f'%{search}%'), # Service Type
+                cast(models.Complaint.product_type.name, String).ilike(f'%{search}%') # Product Type
+            )
+        )
+        .order_by(models.Complaint.created_at.desc())
+    )
+
+    # Apply Filter
+    # ------------
+    # Firm
+    if organization_id:
+        query = query.filter(models.Complaint.firm_id == organization_id)
+    # Customer
+    if customer_id:
+        query = query.filter(models.Complaint.customer_id == customer_id)
+    # Engineer [Default]
+    if current_user.role == 1:
+        query = query.filter(models.Complaint.enginner_id == current_user.id)
+    # Engineer
+    elif engineer_id:
+        query = query.filter(models.Complaint.enginner_id == engineer_id)
+
+    # Resolved
+    if is_resolved is not None:
+        query = query.filter(models.Complaint.is_resolved == is_resolved)
+    # Overdue
+    if is_overdue is not None:
+        query = query.filter(models.Complaint.due_date > datetime.now())
+    # Service Type
+    if service_type_id:
+        query = query.filter(models.Complaint.service_type_id == service_type_id)
+    # Product Type
+    if product_type_id:
+        query = query.filter(models.Complaint.product_type_id == product_type_id)
+
+
+    total_complaints = query.count()
+    query.limit((page - 1) * limit)
+
+    total_page = math.ceil(total_complaints/limit)
+
+    return {"status": "success", "statusCode": 200, "message" : "Successfully got complaints", 
+            "total_count": total_complaints,
             "current_page": page,
             "total_page": total_page,
             "prev_page": page-1 if page and page > 1 else None, 
