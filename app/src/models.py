@@ -119,7 +119,7 @@ class Bill(Base):
     created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
 
-    complaint = relationship("Complaint", back_populates="bill_id")
+    # complaint = relationship("Complaint", back_populates="bill_id")
 
 
 class ServiceType(Base):
