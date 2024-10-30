@@ -14,7 +14,7 @@ class CommonResponseModel(BaseModel):
 # Common Pagination Response Model
 class PaginationResponseModel(BaseModel):
     total_count: int
-    current_page : int
+    current_page : int | None
     total_page : int
     prev_page : int | None
     next_page: int | None
