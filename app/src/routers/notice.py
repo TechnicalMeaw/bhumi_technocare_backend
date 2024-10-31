@@ -32,7 +32,7 @@ async def create( body : schemas.CreateNoticeRequestModel,
     return {"status": "success", "statusCode": 201, "message" : "Notice Added"}
 
 @router.delete("/remove", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def create( notice_id : int,
+async def remove( notice_id : int,
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
@@ -50,8 +50,8 @@ async def create( notice_id : int,
 
 
 
-@router.get("/product_types", response_model = schemas.AllNoticeResponseModel)
-async def get_product_types(is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
+@router.get("/get", response_model = schemas.AllNoticeResponseModel)
+async def get(is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
                     current_user : models.User = Depends(oauth2.get_current_user)):
     
     query = db.query(models.NoticeBoard).filter(cast(models.NoticeBoard.notice, String).ilike(f'%{search}%')).order_by(models.NoticeBoard.created_at.desc())
