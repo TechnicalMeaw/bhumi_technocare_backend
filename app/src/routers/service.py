@@ -147,6 +147,8 @@ async def add_firm(     name : Annotated[str, Form()],
 async def add_customer(     name : Annotated[str, Form()],
                         address : Annotated[str, Form()],
                         mobile_no : Annotated[str, Form()],
+                        area_id : Optional[int] = Form(None),
+                        city_id : Optional[int] = Form(None),
                         depertment : Optional[str] = Form(None),
                         organization_id : Optional[int] = Form(None),
                         remarks : Optional[str] = Form(None),
@@ -164,6 +166,20 @@ async def add_customer(     name : Annotated[str, Form()],
                                    address = address,
                                    depertment = depertment,
                                    remarks = remarks)
+    
+    # Optional
+    if area_id:
+        area = db.query(models.Area).filter(models.Area.id == area_id, models.Area.is_active == True).first()
+        if not area:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid area id")
+        new_customer.area = area.id
+
+    # Optional
+    if city_id:
+        city = db.query(models.City).filter(models.City.id == city_id, models.City.is_active == True).first()
+        if not city:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid city id")
+        new_customer.area = city.id
     
     # Optional
     if organization_id:

@@ -80,6 +80,8 @@ class Customer(Base):
     contact_no = Column(String, nullable = False)
     depertment = Column(String, nullable = True)
     address = Column(String, nullable = False)
+    area = Column(Integer, ForeignKey(Area.id, ondelete="CASCADE"), nullable = True)
+    city = Column(Integer, ForeignKey(City.id, ondelete="CASCADE"), nullable = True)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
