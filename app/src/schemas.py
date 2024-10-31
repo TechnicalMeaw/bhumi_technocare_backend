@@ -92,3 +92,18 @@ class AllAreaResponseModel(CommonResponseModel, PaginationResponseModel):
 class CreateCityRequestModel(BaseModel):
     name: str
     area_id : int
+
+# Notice
+# Create
+class CreateNoticeRequestModel(BaseModel):
+    notice : str
+    
+# Response Model
+class NoticeResModel(BaseModel):
+    id : int
+    notice : str
+    created_at : datetime
+    is_active : bool
+
+class AllNoticeResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[NoticeResModel]
