@@ -14,10 +14,12 @@ router = APIRouter(tags=["Authentication"])
 
 @router.post("/login", response_model= schemas.Token)
 async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    print(user_credentials.client_secret, settings.client_secret)
     if user_credentials.client_secret != settings.client_secret:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Request")
     
     user = db.query(models.User).filter(models.User.phone_no == user_credentials.username, models.User.is_active == True).first()
+    print(user)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
     
@@ -52,6 +54,18 @@ async def logout(db: Session = Depends(get_db), current_user : models.User = Dep
     db.commit()
 
     return {"status": "success", "statusCode": 200, "message" : "Logged Out"}
+
+
+@router.post("/reset_password")
+async def reset_password(request_data: schemas.ResetPasswordRequestModel, db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
+    if not utils.verify(request_data.old_password, current_user.password):
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Incorrect password")
+    
+    current_user.password = utils.hash(request_data.new_password)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Password Changed"}
+
 
 
 

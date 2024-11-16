@@ -51,6 +51,12 @@ class CreateUserRequestModel(BaseModel):
     remarks : Optional[str]
     password : Optional[str]
 
+# Reset Password
+# Request Model
+class ResetPasswordRequestModel(BaseModel):
+    old_password: str
+    new_password: str
+
 class EngineerModel(BaseModel):
     id : int
     name : str
