@@ -177,4 +177,14 @@ class NoticeBoard(Base):
 
 
 
-  
+# Attendance
+class Attendance(Base):
+    __tablename__ = "attendance"
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    user_id = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), index= True, nullable = False)
+    photo = Column(String, nullable = False)
+    is_clock_in = Column(Boolean, nullable = False, server_default = text("True"))
+    is_approved = Column(Boolean, nullable = False, server_default = text("False"))
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+
+    user = relationship("User", foreign_keys=user_id)

@@ -113,3 +113,16 @@ class NoticeResModel(BaseModel):
 
 class AllNoticeResponseModel(CommonResponseModel, PaginationResponseModel):
     data : List[NoticeResModel]
+
+# Attendance
+class AttendanceModel(BaseModel):
+    id : int
+    photo : str
+    is_clock_in : bool
+    is_approved : bool
+    created_at : datetime
+    user : UserQuickDetailResponseModel
+
+
+class AllAttendanceResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[AttendanceModel]

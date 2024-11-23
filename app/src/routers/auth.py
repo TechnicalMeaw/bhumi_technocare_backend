@@ -37,7 +37,7 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
         db.commit()
     
     if not utils.verify(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Credentials")
     
     if not user.is_verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="First verify your phone number")
