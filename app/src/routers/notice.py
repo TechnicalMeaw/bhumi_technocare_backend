@@ -32,7 +32,7 @@ async def create( body : schemas.CreateNoticeRequestModel,
     return {"status": "success", "statusCode": 201, "message" : "Notice Added"}
 
 @router.delete("/remove", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def remove( notice_id : int,
+async def remove( notice_id : str,
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):

@@ -106,7 +106,7 @@ class CreateNoticeRequestModel(BaseModel):
     
 # Response Model
 class NoticeResModel(BaseModel):
-    id : int
+    id : str
     notice : str
     created_at : datetime
     is_active : bool
