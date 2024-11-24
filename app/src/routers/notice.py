@@ -10,6 +10,7 @@ from sqlalchemy.sql.expression import cast, or_, and_
 from sqlalchemy import String, select
 import math
 from app.src.firebase import storage as blob
+from uuid import UUID
 
 
 router = APIRouter(prefix= "/notice",
@@ -32,7 +33,7 @@ async def create( body : schemas.CreateNoticeRequestModel,
     return {"status": "success", "statusCode": 201, "message" : "Notice Added"}
 
 @router.delete("/remove", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def remove( notice_id : str,
+async def remove( notice_id : UUID,
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):

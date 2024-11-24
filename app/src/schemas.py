@@ -3,6 +3,7 @@ from typing import Optional, List, Annotated, Tuple
 from fastapi import UploadFile, File, Form
 from datetime import datetime
 from sqlalchemy.orm import Session
+from uuid import UUID
 
 
 # Common Response Model
@@ -106,7 +107,7 @@ class CreateNoticeRequestModel(BaseModel):
     
 # Response Model
 class NoticeResModel(BaseModel):
-    id : str
+    id : UUID
     notice : str
     created_at : datetime
     is_active : bool
