@@ -87,6 +87,99 @@ async def create_complaint(
     return {"status": "success", "statusCode": 201, "message" : "Complaint Created"}
 
 
+@router.put("/update_complaint", response_model=schemas.UpdateServiceResponseModel)
+async def update_complaint(
+                        complaint_id : Annotated[int, Form()],
+                        customer_id : Optional[int] = Form(None),
+                        product_type_id : Optional[int] = Form(None),
+                        enginner_id : Optional[int] = Form(None),
+                        due_date : Optional[datetime] = Form(None),     # 'due_date': '2024-10-20T23:59:59'  # Format for datetime
+                        service_type_id : Optional[int] = Form(None),
+                        firm_id : Optional[int] = Form(None),
+                        asset_id : Optional[int] = Form(None),
+                        remarks : Optional[str] = Form(None),
+                        photo : Optional[UploadFile] = File(None),
+
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can update complaints")
+    
+    complaint = db.query(models.Complaint).filter(models.Complaint.id == complaint_id).first()
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+    
+    # Customer
+    if customer_id:
+        customer = db.query(models.Customer).filter(models.Customer.id == customer_id, models.Customer.is_active == True).first()
+        if not customer:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid customer id")
+        complaint.customer_id = customer.id
+
+    # Product Type
+    if product_type_id:
+        product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id, models.ProductType.is_active == True).first()
+        if not product_type:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid product type")
+        complaint.product_type_id = product_type.id
+
+    # Engineer
+    if enginner_id:
+        engineer = db.query(models.User).filter(models.User.role != 2, models.User.id == enginner_id, models.User.is_active == True).first()
+        if not engineer:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid engineer id")
+        complaint.enginner_id = engineer.id
+    
+    # Due Date
+    if due_date and complaint.due_date != due_date:
+        complaint.due_date = due_date
+
+    # Service Type
+    if service_type_id:
+        service_type = db.query(models.ServiceType).filter(models.ServiceType.id == service_type_id, models.ServiceType.is_active == True).first()
+        if not service_type:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= "Invalid service type")
+        complaint.service_type_id = service_type.id
+
+    # Organization
+    if firm_id:
+        firm = db.query(models.Firm).filter(models.Firm.id == firm_id).first()
+        if not firm:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid organization id")
+        complaint.firm_id = firm_id
+        
+    # Asset
+    if asset_id:
+        asset = db.query(models.Asset).filter(models.Asset.id == asset_id).first()
+        if not asset:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid asset id")
+        complaint.asset_id = asset_id
+
+    # Photo
+    if photo:
+        try:
+            # If photo exists then delete it
+            if complaint.photo:
+                await blob.delete_file(complaint.photo)
+            # Upload the new photo
+            res = await blob.upload_file(photo)
+            # Assign it to the complaint
+            complaint.photo = res['firebase_url']
+        except Exception:
+            pass
+
+    # Remarks
+    if remarks and complaint.remarks != remarks:
+        complaint.remarks = remarks
+
+    db.commit()
+    db.refresh(complaint)
+
+    return {"status": "success", "statusCode": 200, "message" : "Successfully Updated", "data": complaint}
+
+    
         
 @router.post("/add_firm", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
 async def add_firm(     name : Annotated[str, Form()],

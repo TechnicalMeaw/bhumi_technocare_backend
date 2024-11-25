@@ -165,3 +165,7 @@ class ServiceModel(BaseModel):
 
 class ServiceResponseModel(CommonResponseModel, PaginationResponseModel):
     data : List[ServiceModel]
+
+
+class UpdateServiceResponseModel(CommonResponseModel):
+    data : ServiceModel
