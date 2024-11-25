@@ -62,16 +62,16 @@ class EngineerModel(BaseModel):
     id : int
     name : str
     address : str
-    photo : str
+    photo : str | None
     country_code : str
     phone_no : str
     family_contact_no : str
-    resume : str
+    resume : str | None
     dob : str
     blood_group : str
     depertment : str
     post : str
-    remarks : str
+    remarks : str | None
     created_at : datetime
 
 class AllEngineerResponseModel(CommonResponseModel, PaginationResponseModel):
