@@ -63,13 +63,18 @@ class Firm(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+    # Define relationships
+    city_rel = relationship("City", backref="firms")
+    area_rel = relationship("Area", backref="firms")
+
+    # Hybrid properties
     @hybrid_property
     def area_name(self):
-        return self.area.name
-    
+        return self.area_rel.name  # Use the relationship
+
     @hybrid_property
-    def city_name(self):
-        return self.city.name
+    def city_name(self): 
+        return self.city_rel.name  # Use the relationship
 
 
 class Customer(Base):
@@ -146,6 +151,7 @@ class Complaint(Base):
     photo = Column(String, nullable = True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_resolved = Column(Boolean, nullable = False, server_default = text("False"))
+    is_deleted = Column(Boolean, nullable = False, server_default = text("False"))
 
     organization = relationship("Firm", foreign_keys=firm_id)
     customer = relationship("Customer", foreign_keys=customer_id)

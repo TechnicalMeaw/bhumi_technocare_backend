@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Request
 from .. import schemas, utils, models, oauth2
 from ..database import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 from typing import Annotated, List, Optional
 from ..config import settings
@@ -505,7 +505,7 @@ async def get_customers(organization_id : Optional[int] = None, is_active : Opti
 
 
 
-@router.get("/complaints")
+@router.get("/complaints", response_model=schemas.ServiceResponseModel)
 async def get_complaints(organization_id : Optional[int] = None, 
                          customer_id : Optional [int] = None,
                          engineer_id : Optional[int] = None,
@@ -516,6 +516,8 @@ async def get_complaints(organization_id : Optional[int] = None,
                          is_resolved : Optional[bool] = None,
                          is_overdue : Optional[bool] = None,
 
+                         day_count : Optional[int] = 30,
+
                          page : Optional[int] = 1, 
                          limit : Optional[int] = 10, 
                          search : Optional[str] = "", 
@@ -523,31 +525,30 @@ async def get_complaints(organization_id : Optional[int] = None,
     
     query = (
         db.query(models.Complaint)
-        .join(models.Complaint.organization)
-        .join(models.Complaint.customer)
-        .join(models.Complaint.engineer)
-        # .join(models.Complaint.bill)  
-        .join(models.Complaint.service_type)  
-        .join(models.Complaint.product_type)
+        .join(models.Firm, models.Complaint.organization)  # Join with Firm
+        .join(models.City, models.Firm.city == models.City.id, isouter=True)  # Join with City
+        .join(models.Area, models.Firm.area == models.Area.id, isouter=True)  # Join with Area
+        .join(models.Customer, models.Complaint.customer)  # Join with Customer
+        .join(models.User, models.Complaint.engineer)  # Join with Engineer/User
+        .join(models.ServiceType, models.Complaint.service_type)  # Join with ServiceType
+        .join(models.ProductType, models.Complaint.product_type)  # Join with ProductType
         .filter(
             or_(
-                cast(models.Complaint.id, String).ilike(f'%{search}%'), # Complaint id
-                cast(models.Complaint.organization.name, String).ilike(f'%{search}%'), # Organization name
-                cast(models.Complaint.organization.city_name, String).ilike(f'%{search}%'), # Organization City
-                cast(models.Complaint.organization.area_name, String).ilike(f'%{search}%'), # Organization Area
-                cast(models.Complaint.organization.address, String).ilike(f'%{search}%'), # Organization Address
-
-                cast(models.Complaint.customer.name, String).ilike(f'%{search}%'), # Customer name
-                cast(models.Complaint.customer.address, String).ilike(f'%{search}%'), # Customer City
-                cast(models.Complaint.customer.contact_no, String).ilike(f'%{search}%'), # Customer Contact No.
-
-                cast(models.Complaint.engineer.name, String).ilike(f'%{search}%'), # Engineer name
-                cast(models.Complaint.engineer.phone_no, String).ilike(f'%{search}%'), # Engineer phone no
-
-                # cast(models.Complaint.bill.bill_number, String).ilike(f'%{search}%'),  
-                cast(models.Complaint.service_type.name, String).ilike(f'%{search}%'), # Service Type
-                cast(models.Complaint.product_type.name, String).ilike(f'%{search}%') # Product Type
-            )
+                cast(models.Complaint.id, String).ilike(f"%{search}%"),         # Complaint ID
+                cast(models.Firm.name, String).ilike(f"%{search}%"),           # Firm Name
+                cast(models.City.name, String).ilike(f"%{search}%"),           # Firm City Name
+                cast(models.Area.name, String).ilike(f"%{search}%"),           # Firm Area Name
+                cast(models.Firm.address, String).ilike(f"%{search}%"),        # Firm Address
+                cast(models.Customer.name, String).ilike(f"%{search}%"),       # Customer Name
+                cast(models.Customer.address, String).ilike(f"%{search}%"),    # Customer Address
+                cast(models.Customer.contact_no, String).ilike(f"%{search}%"), # Customer Contact
+                cast(models.User.name, String).ilike(f"%{search}%"),           # Engineer Name
+                cast(models.User.phone_no, String).ilike(f"%{search}%"),       # Engineer Phone No
+                cast(models.ServiceType.name, String).ilike(f"%{search}%"),    # Service Type Name
+                cast(models.ProductType.name, String).ilike(f"%{search}%")     # Product Type Name
+            ),
+            models.Complaint.created_at > (datetime.now() - timedelta(days=day_count)).date(),
+            models.Complaint.is_deleted == False
         )
         .order_by(models.Complaint.created_at.desc())
     )
@@ -593,3 +594,19 @@ async def get_complaints(organization_id : Optional[int] = None,
             "prev_page": page-1 if page and page > 1 else None, 
             "next_page": page+1 if page and page < total_page else None,
             "data": query.all()}
+
+
+@router.delete('/delete_complaint')
+async def delete_complaint(complaint_id : int, db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Admins can delete complaint")
+    
+    complaint = db.query(models.Complaint).filter(models.Complaint.id == complaint_id).first()
+
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+    
+    complaint.is_deleted = True
+    db.commit()
+
+    return {"status": "success", "statusCode": 200, "message" : "Complaint deleted"}

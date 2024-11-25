@@ -127,3 +127,41 @@ class AttendanceModel(BaseModel):
 
 class AllAttendanceResponseModel(CommonResponseModel, PaginationResponseModel):
     data : List[AttendanceModel]
+
+
+
+# Service
+# Response Model
+
+class BillModel(BaseModel):
+    id : int
+    amount : int
+    bill_number : str
+    remarks : str | None
+    photo : str | None
+    is_handed : bool
+    class Config:
+        from_attributes = True
+
+class ServiceModel(BaseModel):
+    id : int
+    due_date : datetime
+    # asset_id
+    remarks : str | None
+    photo : str | None
+    created_at : datetime
+    is_resolved : bool
+
+    organization : AreaResponseModel | None
+    customer : AreaResponseModel
+    product_type : AreaResponseModel
+    engineer : AreaResponseModel
+    service_type : AreaResponseModel
+
+    bill : BillModel
+
+    class Config:
+        from_attributes = True
+
+class ServiceResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[ServiceModel]
