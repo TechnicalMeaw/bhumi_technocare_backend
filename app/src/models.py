@@ -112,6 +112,11 @@ class ProductType(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+class BillType(enum.Enum):
+    cash = 'cash'
+    credit = 'credit'
+    bill = 'bill'
+
 
 class Bill(Base):
     __tablename__ = "bill"
@@ -119,6 +124,7 @@ class Bill(Base):
     firm_id = Column(Integer, ForeignKey(Firm.id, ondelete="CASCADE"), nullable = True)
     customer_id = Column(Integer, ForeignKey(Customer.id, ondelete="CASCADE"), nullable = False)
     amount = Column(Integer, nullable=False)
+    bill_type = Column(Enum(BillType), nullable=False, index=True)
     bill_number = Column(String, nullable=False)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
@@ -126,7 +132,8 @@ class Bill(Base):
     created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
 
-    # complaint = relationship("Complaint", back_populates="bill_id")
+    organization = relationship("Firm", foreign_keys=firm_id)
+    customer = relationship("Customer", foreign_keys=customer_id)
 
 
 class ServiceType(Base):
@@ -149,6 +156,7 @@ class Complaint(Base):
     asset_id = Column(String, ForeignKey(Asset.id, ondelete="CASCADE"), nullable = True)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
+    is_started = Column(Boolean, nullable = False, server_default = text("False"))
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_resolved = Column(Boolean, nullable = False, server_default = text("False"))
     is_deleted = Column(Boolean, nullable = False, server_default = text("False"))

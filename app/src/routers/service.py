@@ -609,6 +609,8 @@ async def get_complaints(organization_id : Optional[int] = None,
                          is_resolved : Optional[bool] = None,
                          is_overdue : Optional[bool] = None,
 
+                         is_started : Optional[bool] = None,
+
                          day_count : Optional[int] = 30,
 
                          page : Optional[int] = 1, 
@@ -673,6 +675,10 @@ async def get_complaints(organization_id : Optional[int] = None,
     # Product Type
     if product_type_id:
         query = query.filter(models.Complaint.product_type_id == product_type_id)
+    # Started or not
+    if is_started:
+        query = query.filter(models.Complaint.is_started == is_started)
+
 
 
     total_complaints = query.count()
@@ -703,3 +709,18 @@ async def delete_complaint(complaint_id : int, db: Session = Depends(get_db), cu
     db.commit()
 
     return {"status": "success", "statusCode": 200, "message" : "Complaint deleted"}
+
+
+@router.get('/start_service')
+async def start_service(complaint_id : int, db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
+    complaint = db.query(models.Complaint).filter(models.Complaint.id == complaint_id).first()
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+    
+    if complaint.enginner_id != current_user.id and current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only assigned engineer or admin can start the service")
+    
+    complaint.is_started = True
+    db.commit()
+    return {"status": "success", "statusCode": 200, "message" : "Service started"}
+
