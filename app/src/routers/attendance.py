@@ -1,14 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Request
-from .. import schemas, utils, models, oauth2
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from .. import schemas, models, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime, timedelta
-from typing import Annotated, List, Optional
-from ..config import settings
+from datetime import datetime
+from typing import Optional
 from app.src.firebase import storage as blob
-from sqlalchemy.sql.expression import cast, or_, and_
 from sqlalchemy.sql import func
-from sqlalchemy import String, select
 import math
 from app.src.firebase import storage as blob
 
@@ -18,7 +15,7 @@ router = APIRouter(prefix= "/attendance",
 
 
 @router.post("/clock_in", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def create(photo : UploadFile = File(),
+async def clock_in(photo : UploadFile = File(),
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
@@ -43,7 +40,7 @@ async def create(photo : UploadFile = File(),
 
 
 @router.post("/clock_out", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def create(photo : UploadFile = File(),
+async def clock_out(photo : UploadFile = File(),
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
@@ -69,7 +66,7 @@ async def create(photo : UploadFile = File(),
 
 
 @router.get("/approve", response_model=schemas.CommonResponseModel)
-async def create(attendance_id : int,
+async def approve(attendance_id : int,
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
