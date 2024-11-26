@@ -44,7 +44,8 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
     
     # create a token
     access_token = oauth2.create_access_token(data=user.id)
-    return {"token": access_token, "existing_user" : True, "user" : user}
+    return {"token": access_token, "existing_user" : True, "user" : user, 
+            'role': 'admin' if user.role == 2 else 'engineer'}
 
 
 @router.get("/logout")
