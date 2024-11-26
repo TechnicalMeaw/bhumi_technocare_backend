@@ -34,6 +34,7 @@ class Token(BaseModel):
     token : str
     existing_user : bool
     user : UserQuickDetailResponseModel
+    role : str
 
 # Create User 
 # Request Model
