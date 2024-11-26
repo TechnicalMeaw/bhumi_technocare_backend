@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from .. import schemas, models, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy.sql.expression import cast, or_, and_
 from typing import Optional
 from app.src.firebase import storage as blob
 from sqlalchemy.sql import func
@@ -94,7 +95,52 @@ async def approve(bill_id : int, db: Session = Depends(get_db),
     return {"status": "success", "statusCode": 200, "message" : "Successfully approved bill payment"}
 
 
-# @router.get('/get_all')
-# async def get_all(bill_type: Optional[models.BillType] = None, day_count : Optional[int] = 30, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
-#                         current_user : models.User = Depends(oauth2.get_current_user)):
-    
+@router.get('/get_all', response_model=schemas.AllBillResponseModel)
+async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[models.BillType] = None, day_count : Optional[int] = 30, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)):
+    query = (
+        db.query(models.Bill)
+        .join(models.User, models.Bill.created_by)
+        .join(models.Customer, models.Bill.customer_id)
+        .filter(or_(models.User.name.ilike(f'%{search}%'),
+                    # models.Bill.id.ilike(f'%{search}%'),
+                    models.Bill.bill_number.ilike(f'%{search}%'),
+                    models.Customer.name.ilike(f'%{search}%'),
+                    models.Customer.contact_no.ilike(f'%{search}%'),
+                    models.Customer.address.ilike(f'%{search}%')
+                    ), 
+                    models.Bill.created_at > (datetime.now() - timedelta(days=day_count)).date(),
+                    )
+        .order_by(models.Bill.created_at.desc())
+        .options(joinedload(models.Bill.engineer), # Eager load the engineer relationship
+                 joinedload(models.Bill.customer)) # Eager load the customer relationship 
+    )
+
+    # If not admin, then show only assigned bills
+    if current_user.role != 2:
+        query = query.filter(models.Attendance.user_id == current_user.id)
+
+    # Filters
+    # -------
+    # Bill Type
+    if bill_type:
+        query = query.filter(models.Bill).filter(models.Bill.bill_type == bill_type)
+
+    # Approved
+    if is_approved is not None:
+        query = query.filter(models.Bill).filter(models.Bill.is_handed == is_approved)
+
+    total_bills = query.count()
+
+    offset = (page - 1) * limit
+    query.limit(offset)
+
+    total_page = math.ceil(total_bills/(limit if limit and limit > 0 else 10))
+
+    return {"status": "success", "statusCode": 200, "message" : "Successfully got bills", 
+            "total_count": total_bills,
+            "current_page": page,
+            "total_page": total_page,
+            "prev_page": page-1 if page and page > 1 else None, 
+            "next_page": page+1 if page and page < total_page else None,
+            "data": query.all()}

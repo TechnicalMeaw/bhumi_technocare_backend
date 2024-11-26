@@ -4,6 +4,7 @@ from fastapi import UploadFile, File, Form
 from datetime import datetime
 from sqlalchemy.orm import Session
 from uuid import UUID
+from ..src import models
 
 
 # Common Response Model
@@ -138,6 +139,7 @@ class BillModel(BaseModel):
     id : int
     amount : int
     bill_number : str
+    bill_type : models.BillType
     remarks : str | None
     photo : str | None
     is_handed : bool
@@ -170,3 +172,15 @@ class ServiceResponseModel(CommonResponseModel, PaginationResponseModel):
 
 class UpdateServiceResponseModel(CommonResponseModel):
     data : ServiceModel
+
+
+class BillResponseModel(BillModel):
+    organization : AreaResponseModel | None
+    customer : AreaResponseModel
+    engineer : AreaResponseModel
+    class Config:
+        from_attributes = True
+
+class AllBillResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[BillResponseModel]
+
