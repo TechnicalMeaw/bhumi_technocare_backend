@@ -92,6 +92,19 @@ class Customer(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
     is_active = Column(Boolean, nullable = False, server_default = text("True"))
 
+    # Define relationships
+    city_rel = relationship("City", backref="customers")
+    area_rel = relationship("Area", backref="customers")
+
+    # Hybrid properties
+    @hybrid_property
+    def area_name(self):
+        return self.area_rel.name  # Use the relationship
+
+    @hybrid_property
+    def city_name(self): 
+        return self.city_rel.name  # Use the relationship
+
 
 class Asset(Base):
     __tablename__ = "assets"
@@ -134,6 +147,8 @@ class Bill(Base):
 
     organization = relationship("Firm", foreign_keys=firm_id)
     customer = relationship("Customer", foreign_keys=customer_id)
+    engineer = relationship("User", foreign_keys=created_by)
+
 
 
 class ServiceType(Base):

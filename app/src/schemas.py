@@ -135,6 +135,32 @@ class AllAttendanceResponseModel(CommonResponseModel, PaginationResponseModel):
 # Service
 # Response Model
 
+# Customer
+class OrganizationModel(BaseModel):
+    id : int
+    name : str
+    address : str
+    contact_no : str | None
+    area_name : str | None
+    city_name : str | None
+    contact_person : str | None
+    pincode : str | None
+    gst_no : str | None
+    photo : str | None
+    remarks : str | None
+
+
+class CustomerModel(BaseModel):
+    id : int
+    name : str
+    address : str
+    contact_no : str
+    area_name : str | None
+    city_name : str | None
+    depertment : str | None
+    photo : str | None
+    remarks : str | None
+
 class BillModel(BaseModel):
     id : int
     amount : int
@@ -155,10 +181,10 @@ class ServiceModel(BaseModel):
     created_at : datetime
     is_resolved : bool
 
-    organization : AreaResponseModel | None
-    customer : AreaResponseModel
+    organization : OrganizationModel | None
+    customer : CustomerModel
     product_type : AreaResponseModel
-    engineer : AreaResponseModel
+    engineer : EngineerModel
     service_type : AreaResponseModel
 
     bill : BillModel
@@ -175,9 +201,9 @@ class UpdateServiceResponseModel(CommonResponseModel):
 
 
 class BillResponseModel(BillModel):
-    organization : AreaResponseModel | None
-    customer : AreaResponseModel
-    engineer : AreaResponseModel
+    organization : OrganizationModel | None
+    customer : CustomerModel
+    engineer : EngineerModel
     class Config:
         from_attributes = True
 
