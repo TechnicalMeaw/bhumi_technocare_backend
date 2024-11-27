@@ -183,7 +183,7 @@ class ServiceModel(BaseModel):
     photo : str | None
     created_at : datetime
     is_resolved : bool
-
+    is_started : bool
     organization : OrganizationModel | None
     customer : CustomerModel
     product_type : AreaResponseModel
