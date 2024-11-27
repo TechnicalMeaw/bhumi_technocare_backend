@@ -190,7 +190,7 @@ class ServiceModel(BaseModel):
     engineer : EngineerModel
     service_type : AreaResponseModel
 
-    bill : BillModel
+    bill : BillModel | None
 
     class Config:
         from_attributes = True
