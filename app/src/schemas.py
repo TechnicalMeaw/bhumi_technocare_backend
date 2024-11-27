@@ -141,8 +141,8 @@ class OrganizationModel(BaseModel):
     name : str
     address : str
     contact_no : str | None
-    area_name : str | None
-    city_name : str | None
+    area_name : Optional[str]| None
+    city_name : Optional[str] | None
     contact_person : str | None
     pincode : str | None
     gst_no : str | None
@@ -157,8 +157,8 @@ class CustomerModel(BaseModel):
     name : str
     address : str
     contact_no : str
-    area_name : str | None
-    city_name : str | None
+    area_name : Optional[str] | None
+    city_name : Optional[str] | None
     depertment : str | None
     photo : str | None
     remarks : str | None
