@@ -135,7 +135,7 @@ class AllAttendanceResponseModel(CommonResponseModel, PaginationResponseModel):
 # Service
 # Response Model
 
-# Customer
+# Organization
 class OrganizationModel(BaseModel):
     id : int
     name : str
@@ -148,8 +148,10 @@ class OrganizationModel(BaseModel):
     gst_no : str | None
     photo : str | None
     remarks : str | None
+    class Config:
+        from_attributes = True
 
-
+# Customer
 class CustomerModel(BaseModel):
     id : int
     name : str
@@ -160,7 +162,8 @@ class CustomerModel(BaseModel):
     depertment : str | None
     photo : str | None
     remarks : str | None
-
+    class Config:
+        from_attributes = True
 class BillModel(BaseModel):
     id : int
     amount : int

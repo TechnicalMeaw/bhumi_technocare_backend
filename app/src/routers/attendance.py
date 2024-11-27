@@ -70,6 +70,9 @@ async def approve(attendance_id : int,
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can approve attendance")
 
     attendance = db.query(models.Attendance).filter(models.Attendance.id == attendance_id).first()
 
@@ -120,5 +123,6 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
 
 
     
-
+@router.get('/status')
+async def status()
     
