@@ -123,6 +123,6 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
 
 
     
-@router.get('/status')
-async def status()
+# @router.get('/status')
+# async def status()
     
