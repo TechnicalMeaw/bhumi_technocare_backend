@@ -123,7 +123,7 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
 
 
     
-@router.get('/status')
+@router.get('/status', response_model=schemas.AttendanceStatusResponseModel)
 async def status(db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     

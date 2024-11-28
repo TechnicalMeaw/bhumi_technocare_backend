@@ -218,3 +218,5 @@ class AttendanceStatusResponseModel(CommonResponseModel):
     is_clocked_in : bool
     attendance_status : int
     last_recorded : datetime | None
+    class Config:
+        from_attributes = True
