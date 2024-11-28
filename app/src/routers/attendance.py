@@ -123,6 +123,16 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
 
 
     
-# @router.get('/status')
-# async def status()
+@router.get('/status')
+async def status(db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)):
     
+    existing_attendance = db.query(models.Attendance).filter(models.Attendance.user_id == current_user.id, models.Attendance.created_at >= datetime.now().date()).order_by(models.Attendance.created_at.desc()).first()
+
+    if not existing_attendance:
+        return {"status": "success", "statusCode": 200, "message" : "Successfully got attendance status", 
+                "is_clocked_in" : False, "attendance_status" : -1, "last_recorded" : None}
+    
+    return {"status": "success", "statusCode": 200, "message" : "Successfully got attendance status", 
+                "is_clocked_in" : existing_attendance.is_clock_in, 
+                "attendance_status" : 1 if existing_attendance.is_clock_in else 0, "last_recorded" : existing_attendance.created_at}
