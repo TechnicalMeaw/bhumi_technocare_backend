@@ -59,18 +59,13 @@ async def create_user(name : Annotated[str, Form()],
                             family_contact_no = family_contact_no)
     
     if photo:
-        try:
-            res = await blob.upload_file(photo)
-            new_user.photo = res['firebase_url']
-        except Exception:
-            pass
+        res = await blob.upload_file(photo)
+        new_user.photo = res['firebase_url']
     
     if resume:
-        try:
-            res = await blob.upload_file(resume)
-            new_user.resume = res['firebase_url']
-        except Exception:
-            pass
+        res = await blob.upload_file(resume)
+        new_user.resume = res['firebase_url']
+        
 
     db.add(new_user)
     db.commit()
