@@ -93,7 +93,7 @@ async def update_engineer_details(user_id : Annotated[int, Form()],
                         db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
-    if current_user.id != user_id and current_user.role != 3:
+    if current_user.id != user_id and current_user.role != 2:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the permission to perform this action")
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
