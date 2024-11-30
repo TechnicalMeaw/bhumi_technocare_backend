@@ -7,7 +7,6 @@ from typing import Optional
 from app.src.firebase import storage as blob
 from sqlalchemy.sql import func
 import math
-from app.src.firebase import storage as blob
 
 
 router = APIRouter(prefix= "/attendance",
@@ -45,7 +44,7 @@ async def clock_out(photo : UploadFile = File(),
                         current_user : models.User = Depends(oauth2.get_current_user)
                         ):
     now = datetime.now()
-    existing_attendance = db.query(models.Attendance).filter(models.Attendance.user_id == current_user.id, models.Attendance.created_at > datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0)).order_by(models.Attendance.created_at.desc()).first()
+    existing_attendance = db.query(models.Attendance).filter(models.Attendance.user_id == current_user.id, models.Attendance.created_at >= now.date()).order_by(models.Attendance.created_at.desc()).first()
 
     if not existing_attendance or (existing_attendance and existing_attendance.is_clock_in == False):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is already clocked out")
@@ -124,7 +123,7 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
 
     
 @router.get('/status', response_model=schemas.AttendanceStatusResponseModel)
-async def status(db: Session = Depends(get_db), 
+async def get_status(db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
     existing_attendance = db.query(models.Attendance).filter(models.Attendance.user_id == current_user.id, models.Attendance.created_at >= datetime.now().date()).order_by(models.Attendance.created_at.desc()).first()
