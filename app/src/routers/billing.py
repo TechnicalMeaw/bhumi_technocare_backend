@@ -20,7 +20,8 @@ async def create(complaint_id : int,
                  amount : int,
                  bill_type : models.BillType,
                  bill_number : str,
-                 photo : Optional[UploadFile] = File(None),
+                 bill_photo : Optional[UploadFile] = File(None),
+                 asset_photo : Optional[UploadFile] = File(None),
                  remarks : Optional[str] = Form(None),
                  db: Session = Depends(get_db), 
                  current_user : models.User = Depends(oauth2.get_current_user)):
@@ -42,10 +43,17 @@ async def create(complaint_id : int,
                 bill_number = bill_number,
                 remarks = remarks,
                 created_by = current_user.id)
-    if photo:
+    if bill_photo:
         try:
-            res = await blob.upload_file(photo)
+            res = await blob.upload_file(bill_photo)
             new_bill.photo = res['firebase_url']
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY, detail="Something went wrong, please try again after some time")
+
+    if asset_photo:
+        try:
+            res = await blob.upload_file(asset_photo)
+            new_bill.asset_photo = res['firebase_url']
         except Exception:
             raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY, detail="Something went wrong, please try again after some time")
 

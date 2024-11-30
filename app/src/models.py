@@ -141,6 +141,7 @@ class Bill(Base):
     bill_number = Column(String, nullable=False)
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
+    asset_photo = Column(String, nullable = True)
     is_handed = Column(Boolean, nullable = False, server_default = text("False"))
     created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
