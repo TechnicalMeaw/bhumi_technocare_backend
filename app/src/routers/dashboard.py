@@ -16,7 +16,7 @@ router = APIRouter(prefix= "/dashboard",
                    tags=["Dashboard"])
 
 
-@router.post("/services")
+@router.get("/services")
 async def services(day_count : Optional[int] = 30, db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
@@ -47,7 +47,7 @@ async def services(day_count : Optional[int] = 30, db: Session = Depends(get_db)
             ]}
 
 
-@router.post("/bills")
+@router.get("/bills")
 async def bills(day_count : Optional[int] = 30, db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
@@ -84,7 +84,7 @@ async def bills(day_count : Optional[int] = 30, db: Session = Depends(get_db),
             ]}
 
 
-@router.post("/payments")
+@router.get("/payments")
 async def service(day_count : Optional[int] = 30, db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
