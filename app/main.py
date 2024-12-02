@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.src import models
 from app.src.database import engine
-from app.src.routers import users, auth, engineers, service, notice, attendance, billing
+from app.src.routers import users, auth, engineers, service, notice, attendance, billing, dashboard
 
 
 # models.Base.metadata.create_all(bind=engine)
@@ -16,4 +16,5 @@ app.include_router(service.router)
 app.include_router(notice.router)
 app.include_router(attendance.router)
 app.include_router(billing.router)
+app.include_router(dashboard.router)
 
