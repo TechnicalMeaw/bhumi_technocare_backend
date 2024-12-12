@@ -88,7 +88,7 @@ async def bills(day_count : Optional[int] = 30, db: Session = Depends(get_db),
 async def service(day_count : Optional[int] = 30, db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     
-    query = db.query(models.Bill).filter(models.Bill.is_deleted == False, models.Bill.created_at > (datetime.now() - timedelta(days=day_count)).date())
+    query = db.query(models.Bill).filter(models.Bill.created_at > (datetime.now() - timedelta(days=day_count)).date())
 
     if current_user.role != 2:
         query = query.filter(models.Bill.created_by == current_user.id, models.Bill.bill_type != models.BillType.bill)
