@@ -318,7 +318,7 @@ async def add_city( body : schemas.CreateCityRequestModel,
                         ):
     
     if current_user.role != 2:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create city")
     
     area = db.query(models.Area).filter(models.Area.id == body.area_id, models.Area.is_active == True).first()
     if not area:
@@ -338,13 +338,31 @@ async def add_product_type( body : schemas.CreateAreaRequestModel,
                         ):
     
     if current_user.role != 2:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create product type")
     
     new_product_type = models.ProductType(name = body.name)
     db.add(new_product_type)
     db.commit()
     
     return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
+
+
+@router.delete("/delete_product_type", response_model=schemas.CommonResponseModel)
+async def delete_product_type( product_type_id : int,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete product type")
+    
+    product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id).first()
+    if not product_type:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid product type id")
+    db.delete(product_type)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Product Type Deleted"}
 
 
 @router.post("/add_service_type", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
@@ -354,13 +372,32 @@ async def add_service_type( body : schemas.CreateAreaRequestModel,
                         ):
     
     if current_user.role != 2:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create service type")
     
     new_product_type = models.ServiceType(name = body.name)
     db.add(new_product_type)
     db.commit()
     
     return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
+
+
+@router.delete("/delete_service_type", response_model=schemas.CommonResponseModel)
+async def delete_service_type( service_type_id : int,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete service type")
+    
+    service_type = db.query(models.ServiceType).filter(models.ServiceType.id == service_type_id).first()
+    if not service_type:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid service type id")
+    db.delete(service_type)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Service Type Deleted"}
+
 
 
 @router.get("/service_types", response_model = schemas.AllAreaResponseModel)
