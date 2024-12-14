@@ -164,6 +164,7 @@ class CustomerModel(BaseModel):
     remarks : str | None
     class Config:
         from_attributes = True
+
 class BillModel(BaseModel):
     id : int
     amount : int
@@ -172,6 +173,7 @@ class BillModel(BaseModel):
     remarks : str | None
     photo : str | None
     is_handed : bool
+    created_at : datetime
     class Config:
         from_attributes = True
 
@@ -220,3 +222,22 @@ class AttendanceStatusResponseModel(CommonResponseModel):
     last_recorded : datetime | None
     class Config:
         from_attributes = True
+
+class ExpenceResponseModel(BaseModel):
+    id : int
+    amount : int
+    expence_type : models.ExpenceType
+    remarks : str | None
+    photo : str | None
+    details : str
+    is_approved : bool
+    is_declined : bool
+    organization : OrganizationModel | None
+    customer : CustomerModel
+    engineer : EngineerModel
+    created_at : datetime
+    class Config:
+        from_attributes = True
+
+class AllExpenceResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : List[ExpenceResponseModel]

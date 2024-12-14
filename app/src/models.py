@@ -218,3 +218,27 @@ class Attendance(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
 
     user = relationship("User", foreign_keys=user_id)
+
+class ExpenceType(enum.Enum):
+    Travel = 'Travel'
+    Component = 'Component'
+    Other = 'Other'
+
+class Expence(Base):
+    __tablename__ = "expence"
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    firm_id = Column(Integer, ForeignKey(Firm.id, ondelete="CASCADE"), nullable = True)
+    customer_id = Column(Integer, ForeignKey(Customer.id, ondelete="CASCADE"), nullable = False)
+    expence_type = Column(Enum(ExpenceType), nullable=False, index=True)
+
+    amount = Column(Integer, nullable=False)
+    details = Column(String, nullable = False)
+    photo = Column(String, nullable = True)
+    is_approved = Column(Boolean, nullable = False, server_default = text("False"))
+    is_declined = Column(Boolean, nullable = False, server_default = text("False"))
+    created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
+
+    organization = relationship("Firm", foreign_keys=firm_id)
+    customer = relationship("Customer", foreign_keys=customer_id)
+    engineer = relationship("User", foreign_keys=created_by)
