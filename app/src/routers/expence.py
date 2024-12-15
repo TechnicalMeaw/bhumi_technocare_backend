@@ -11,7 +11,7 @@ import math
 from app.src.firebase import storage as blob
 
 
-router = APIRouter(prefix= "/expence",
+router = APIRouter(prefix= "/expense",
                    tags=["Expence"])
 
 
@@ -21,7 +21,6 @@ async def create(complaint_id : int = Form(...),
                  expence_type : models.ExpenceType = Form(...),
                  details : str = Form(...),
                  photo : Optional[UploadFile] = File(None),
-                 remarks : Optional[str] = Form(None),
                  db: Session = Depends(get_db), 
                  current_user : models.User = Depends(oauth2.get_current_user)):
     
@@ -41,7 +40,6 @@ async def create(complaint_id : int = Form(...),
                     details = details,
                     expence_type = expence_type,
                     amount = amount,
-                    remarks = remarks,
                     created_by = current_user.id
                     )
     if photo:
