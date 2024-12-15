@@ -16,10 +16,10 @@ router = APIRouter(prefix= "/expence",
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def create(complaint_id : int,
-                 amount : int,
-                 expence_type : models.ExpenceType,
-                 details : str,
+async def create(complaint_id : int = Form(...),
+                 amount : int = Form(...),
+                 expence_type : models.ExpenceType = Form(...),
+                 details : str = Form(...),
                  photo : Optional[UploadFile] = File(None),
                  remarks : Optional[str] = Form(None),
                  db: Session = Depends(get_db), 
