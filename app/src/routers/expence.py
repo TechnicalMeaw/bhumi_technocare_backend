@@ -122,7 +122,6 @@ async def approve(expence_id : int, is_approved : bool, db: Session = Depends(ge
 #             "next_page": page+1 if page and page < total_page else None,
 #             "data": query.all()}
 
-
 @router.get('/get_all', response_model=schemas.AllExpenceResponseModel)
 async def get_all(
     is_approved: Optional[bool] = None, 
@@ -137,8 +136,8 @@ async def get_all(
     # Base query
     query = (
         db.query(models.Expence)
-        .join(models.User, models.Expence.created_by)
-        .join(models.Customer, models.Expence.customer_id)
+        .join(models.User, models.Expence.created_by == models.User.id)  # Fix join on the relationship
+        .join(models.Customer, models.Expence.customer_id == models.Customer.id)  # Fix join on the relationship
         .filter(
             or_(
                 models.User.name.ilike(f"%{search}%"),
@@ -159,7 +158,6 @@ async def get_all(
     # Filter for non-admin users
     if current_user.role != 2:
         query = query.filter(models.Expence.created_by == current_user.id)
-
 
     # Expence Type Filter
     if expence_type:
