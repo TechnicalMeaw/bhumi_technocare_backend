@@ -16,10 +16,10 @@ router = APIRouter(prefix= "/billing",
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
-async def create(complaint_id : int,
-                 amount : int,
-                 bill_type : models.BillType,
-                 bill_number : str,
+async def create(complaint_id : int = Form(...),
+                 amount : int = Form(...),
+                 bill_type : models.BillType = Form(...),
+                 bill_number : str = Form(...),
                  bill_photo : Optional[UploadFile] = File(None),
                  asset_photo : Optional[UploadFile] = File(None),
                  remarks : Optional[str] = Form(None),
