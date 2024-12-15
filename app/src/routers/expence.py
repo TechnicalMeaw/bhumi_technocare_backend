@@ -101,11 +101,11 @@ async def get_all(is_approved : Optional[bool] = None, expence_type: Optional[mo
     # -------
     # Expence Type
     if expence_type:
-        query = query.filter(models.Expence).filter(models.Expence.expence_type == expence_type)
+        query = query.filter(models.Expence.expence_type == expence_type)
 
     # Approved
     if is_approved is not None:
-        query = query.filter(models.Expence).filter(models.Expence.is_approved == is_approved, models.Expence.is_declined != is_approved)
+        query = query.filter(models.Expence.is_approved == is_approved, models.Expence.is_declined != is_approved)
 
     total_expences = query.count()
 
