@@ -227,7 +227,6 @@ class ExpenceResponseModel(BaseModel):
     id : int
     amount : int
     expence_type : models.ExpenceType
-    remarks : str | None
     photo : str | None
     details : str
     is_approved : bool
