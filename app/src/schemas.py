@@ -172,6 +172,7 @@ class BillModel(BaseModel):
     bill_type : models.BillType
     remarks : str | None
     photo : str | None
+    asset_photo : str | None
     is_handed : bool
     created_at : datetime
     class Config:
