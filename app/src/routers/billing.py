@@ -126,7 +126,7 @@ async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[model
 
     # If not admin, then show only assigned bills
     if current_user.role != 2:
-        query = query.filter(models.Attendance.user_id == current_user.id)
+        query = query.filter(models.Bill.created_by == current_user.id)
 
     # Filters
     # -------
