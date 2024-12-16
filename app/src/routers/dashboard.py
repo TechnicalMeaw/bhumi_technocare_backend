@@ -28,6 +28,7 @@ async def services(day_count : Optional[int] = 30, db: Session = Depends(get_db)
     total = query.count()
     pending = query.filter(models.Complaint.is_resolved == False, models.Complaint.is_started == False).count()
     in_progress = query.filter(models.Complaint.is_resolved == False, models.Complaint.is_started == True).count()
+    completed = query.filter(models.Complaint.is_resolved == True).count()
 
 
     return {"status": "success", "statusCode": 200, "message" : "Successfully got service graph data",
@@ -43,6 +44,10 @@ async def services(day_count : Optional[int] = 30, db: Session = Depends(get_db)
                 {
                     "label": "In-progress",
                     "value": in_progress
+                },
+                {
+                    "label": "Completed",
+                    "value": completed
                 }
             ]}
 
