@@ -125,6 +125,7 @@ async def approve(expence_id : int, is_approved : bool, db: Session = Depends(ge
 @router.get('/get_all', response_model=schemas.AllExpenceResponseModel)
 async def get_all(
     is_approved: Optional[bool] = None, 
+    is_pending : Optional[bool] = False,
     expence_type: Optional[models.ExpenceType] = None, 
     day_count: Optional[int] = 30, 
     page: Optional[int] = 1, 
@@ -168,6 +169,11 @@ async def get_all(
         query = query.filter(
             models.Expence.is_approved == is_approved,
             models.Expence.is_declined != is_approved
+        )
+    elif is_pending:
+        query = query.filter(
+            models.Expence.is_approved == False,
+            models.Expence.is_declined == False
         )
 
     # Total Count
