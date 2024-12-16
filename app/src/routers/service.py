@@ -713,7 +713,7 @@ async def get_complaints(organization_id : Optional[int] = None,
     if product_type_id:
         query = query.filter(models.Complaint.product_type_id == product_type_id)
     # Started or not
-    if is_started:
+    if is_started is not None:
         query = query.filter(models.Complaint.is_started == is_started)
 
 
