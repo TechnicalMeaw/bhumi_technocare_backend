@@ -132,11 +132,11 @@ async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[model
     # -------
     # Bill Type
     if bill_type:
-        query = query.filter(models.Bill).filter(models.Bill.bill_type == bill_type)
+        query = query.filter(models.Bill.bill_type == bill_type)
 
     # Approved
     if is_approved is not None:
-        query = query.filter(models.Bill).filter(models.Bill.is_handed == is_approved)
+        query = query.filter(models.Bill.is_handed == is_approved)
 
     total_bills = query.count()
 
