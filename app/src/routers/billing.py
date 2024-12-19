@@ -80,6 +80,9 @@ async def receive_credit_payment(bill_id : int, db: Session = Depends(get_db),
     if bill.created_by != current_user.id and current_user.role != 2:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin or who created the bill can collect this payment")
     
+    if current_user.role == 2:
+        bill.is_handed = True
+    
     bill.bill_type = models.BillType.cash
     db.commit()
 
@@ -87,7 +90,7 @@ async def receive_credit_payment(bill_id : int, db: Session = Depends(get_db),
 
 
 @router.get('/approve', response_model=schemas.CommonResponseModel)
-async def approve(bill_id : int, db: Session = Depends(get_db), 
+async def approve(bill_id : int, gst_bill_number : Optional[str] = Form(None), db: Session = Depends(get_db), 
                  current_user : models.User = Depends(oauth2.get_current_user)):
     bill = db.query(models.Bill).filter(models.Bill.id == bill_id).first()
     if not bill:
@@ -95,6 +98,11 @@ async def approve(bill_id : int, db: Session = Depends(get_db),
     
     if current_user.role != 2:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can approve bills")
+    
+    if bill.bill_type == models.BillType.bill:
+        if not gst_bill_number:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="GST bill number is required")
+        bill.gst_bill_number = gst_bill_number
     
     bill.is_handed = True
 
@@ -104,7 +112,8 @@ async def approve(bill_id : int, db: Session = Depends(get_db),
 
 
 @router.get('/get_all', response_model=schemas.AllBillResponseModel)
-async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[models.BillType] = None, day_count : Optional[int] = 30, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
+async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[models.BillType] = None, engineer_id : Optional[int] = None, customer_id : Optional[int] = None,
+                  day_count : Optional[int] = 30, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     query = (
         db.query(models.Bill)
@@ -127,6 +136,12 @@ async def get_all(is_approved : Optional[bool] = None, bill_type: Optional[model
     # If not admin, then show only assigned bills
     if current_user.role != 2:
         query = query.filter(models.Bill.created_by == current_user.id)
+    else:
+        if engineer_id:
+            query = query.filter(models.Bill.created_by == engineer_id)
+        if customer_id:
+            query = query.filter(models.Bill.customer_id == customer_id)
+
 
     # Filters
     # -------

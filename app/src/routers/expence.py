@@ -56,7 +56,7 @@ async def create(complaint_id : int = Form(...),
 
 
 @router.get('/approve', response_model=schemas.CommonResponseModel)
-async def approve(expence_id : int, is_approved : bool, db: Session = Depends(get_db), 
+async def approve(expence_id : int, is_approved : bool, remarks : str, db: Session = Depends(get_db), 
                  current_user : models.User = Depends(oauth2.get_current_user)):
     expence = db.query(models.Expence).filter(models.Expence.id == expence_id).first()
     if not expence:
@@ -67,60 +67,12 @@ async def approve(expence_id : int, is_approved : bool, db: Session = Depends(ge
     
     expence.is_approved = is_approved
     expence.is_declined = not is_approved
+    expence.remarks = remarks
     db.commit()
 
     return {"status": "success", "statusCode": 200, "message" : "Successfully approved expences"}
 
 
-
-# @router.get('/get_all', response_model=schemas.AllExpenceResponseModel)
-# async def get_all(is_approved : Optional[bool] = None, expence_type: Optional[models.ExpenceType] = None, day_count : Optional[int] = 30, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
-#                         current_user : models.User = Depends(oauth2.get_current_user)):
-#     query = (
-#         db.query(models.Expence)
-#         .join(models.User, models.Expence.created_by)
-#         .join(models.Customer, models.Expence.customer_id)
-#         .filter(or_(models.User.name.ilike(f'%{search}%'),
-#                     models.Expence.details.ilike(f'%{search}%'),
-#                     models.Customer.name.ilike(f'%{search}%'),
-#                     models.Customer.contact_no.ilike(f'%{search}%'),
-#                     models.Customer.address.ilike(f'%{search}%')
-#                     ), 
-#                     models.Expence.created_at > (datetime.now() - timedelta(days=day_count)).date(),
-#                     )
-#         .order_by(models.Expence.created_at.desc())
-#         .options(joinedload(models.Expence.engineer), # Eager load the engineer relationship
-#                  joinedload(models.Expence.customer)) # Eager load the customer relationship 
-#     )
-
-#     # If not admin, then show only assigned expences
-#     if current_user.role != 2:
-#         query = query.filter(models.Expence.created_by == current_user.id)
-
-#     # Filters
-#     # -------
-#     # Expence Type
-#     if expence_type:
-#         query = query.filter(models.Expence.expence_type == expence_type)
-
-#     # Approved
-#     if is_approved is not None:
-#         query = query.filter(models.Expence.is_approved == is_approved, models.Expence.is_declined != is_approved)
-
-#     total_expences = query.count()
-
-#     offset = (page - 1) * limit
-#     query.limit(offset)
-
-#     total_page = math.ceil(total_expences/(limit if limit and limit > 0 else 10))
-
-#     return {"status": "success", "statusCode": 200, "message" : "Successfully got expences", 
-#             "total_count": total_expences,
-#             "current_page": page,
-#             "total_page": total_page,
-#             "prev_page": page-1 if page and page > 1 else None, 
-#             "next_page": page+1 if page and page < total_page else None,
-#             "data": query.all()}
 
 @router.get('/get_all', response_model=schemas.AllExpenceResponseModel)
 async def get_all(

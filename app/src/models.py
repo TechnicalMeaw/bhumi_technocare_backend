@@ -142,6 +142,7 @@ class Bill(Base):
     remarks = Column(String, nullable = True)
     photo = Column(String, nullable = True)
     asset_photo = Column(String, nullable = True)
+    gst_bill_number = Column(String, nullable = True)
     is_handed = Column(Boolean, nullable = False, server_default = text("False"))
     created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
@@ -236,6 +237,7 @@ class Expence(Base):
     photo = Column(String, nullable = True)
     is_approved = Column(Boolean, nullable = False, server_default = text("False"))
     is_declined = Column(Boolean, nullable = False, server_default = text("False"))
+    remarks = Column(String, nullable = True)
     created_by = Column(Integer, ForeignKey(User.id, ondelete="CASCADE"), nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=TextClause("Now()"))
 

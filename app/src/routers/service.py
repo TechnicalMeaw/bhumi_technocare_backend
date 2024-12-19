@@ -347,6 +347,22 @@ async def add_product_type( body : schemas.CreateAreaRequestModel,
     return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
 
 
+@router.put("/edit_product_type", response_model=schemas.CommonResponseModel)
+async def edit_product_type(product_type_id : int, updated_name : str,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)):
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete product type")
+    
+    product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id).first()
+    if not product_type:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid product type id")
+    
+    product_type.name = updated_name
+    db.commit()
+    return {"status": "success", "statusCode": 200, "message" : "Product Type Updated"}
+
+
 @router.delete("/delete_product_type", response_model=schemas.CommonResponseModel)
 async def delete_product_type( product_type_id : int,
                         db: Session = Depends(get_db), 
@@ -359,6 +375,10 @@ async def delete_product_type( product_type_id : int,
     product_type = db.query(models.ProductType).filter(models.ProductType.id == product_type_id).first()
     if not product_type:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid product type id")
+    
+    is_used = db.query(models.Complaint).filter(models.Complaint.product_type_id == product_type.id)
+    if is_used:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Product type is already in use")
     db.delete(product_type)
     db.commit()
     
@@ -381,6 +401,22 @@ async def add_service_type( body : schemas.CreateAreaRequestModel,
     return {"status": "success", "statusCode": 201, "message" : "Product Type Added"}
 
 
+@router.put("/edit_service_type", response_model=schemas.CommonResponseModel)
+async def edit_service_type(service_type_id : int, updated_name : str,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)):
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete service type")
+    
+    service_type = db.query(models.ServiceType).filter(models.ServiceType.id == service_type_id).first()
+    if not service_type:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid service type id")
+    
+    service_type.name = updated_name
+    db.commit()
+    return {"status": "success", "statusCode": 200, "message" : "Service Type Updated"}
+
+
 @router.delete("/delete_service_type", response_model=schemas.CommonResponseModel)
 async def delete_service_type( service_type_id : int,
                         db: Session = Depends(get_db), 
@@ -393,6 +429,11 @@ async def delete_service_type( service_type_id : int,
     service_type = db.query(models.ServiceType).filter(models.ServiceType.id == service_type_id).first()
     if not service_type:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid service type id")
+    
+    is_used = db.query(models.Complaint).filter(models.Complaint.service_type_id == service_type.id)
+    if is_used:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Service type is already in use")
+    
     db.delete(service_type)
     db.commit()
     
