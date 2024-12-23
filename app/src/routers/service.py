@@ -600,7 +600,8 @@ async def get_cities(area_id : Optional[int] = None, is_active : Optional[bool] 
 async def get_organizations(is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
                     current_user : models.User = Depends(oauth2.get_current_user)):
     
-    query = db.query(models.Firm).filter(cast(models.Firm.name, String).ilike(f'%{search}%')).order_by(models.Firm.created_at.desc())
+    query = db.query(models.Firm).filter(or_(cast(models.Firm.name, String).ilike(f'%{search}%'),
+                                             cast(models.Firm.contact_no, String).ilike(f'%{search}%'))).order_by(models.Firm.created_at.desc())
     if is_active is not None:
         query = query.filter(models.Firm.is_active == is_active)
 
@@ -637,7 +638,10 @@ async def get_organizations(is_active : Optional[bool] = None, page : Optional[i
 @router.get("/customers", response_model = schemas.AllAreaResponseModel)
 async def get_customers(organization_id : Optional[int] = None, is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
                     current_user : models.User = Depends(oauth2.get_current_user)):
-    query = db.query(models.Customer).filter(cast(models.Customer.name, String).ilike(f'%{search}%')).order_by(models.Customer.created_at.desc())
+    query = db.query(models.Customer).filter(or_(
+        cast(models.Customer.name, String).ilike(f'%{search}%'),
+        cast(models.Customer.contact_no, String).ilike(f'%{search}%'))
+        ).order_by(models.Customer.created_at.desc())
 
     if organization_id:
         query = query.filter(models.Customer.firm_id == organization_id)
