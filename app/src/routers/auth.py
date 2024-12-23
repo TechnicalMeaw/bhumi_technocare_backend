@@ -70,4 +70,16 @@ async def reset_password(request_data: schemas.ResetPasswordRequestModel, db: Se
 
 
 
-
+@router.post("/reset_to_default_password")
+async def reset_to_default_password(user_id : int, db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can reset password")
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+    user.password = utils.hash("Bhumi@123")
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Password Reset"}
