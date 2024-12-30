@@ -237,7 +237,7 @@ class ExpenceResponseModel(BaseModel):
     customer : CustomerModel
     engineer : EngineerModel
     created_at : datetime
-    remarks : str
+    remarks : str | None
     class Config:
         from_attributes = True
 
