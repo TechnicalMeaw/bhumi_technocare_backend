@@ -70,7 +70,7 @@ async def approve(expence_id : int, is_approved : bool, remarks : str, db: Sessi
     expence.remarks = remarks
     db.commit()
 
-    return {"status": "success", "statusCode": 200, "message" : "Successfully approved expences"}
+    return {"status": "success", "statusCode": 200, "message" : "Successfully approved expence" if is_approved else "Successfully declined expence"}
 
 
 
