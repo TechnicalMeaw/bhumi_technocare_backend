@@ -173,6 +173,7 @@ class BillModel(BaseModel):
     remarks : str | None
     photo : str | None
     asset_photo : str | None
+    gst_bill_number :  str | None
     is_handed : bool
     created_at : datetime
     class Config:
@@ -236,6 +237,7 @@ class ExpenceResponseModel(BaseModel):
     customer : CustomerModel
     engineer : EngineerModel
     created_at : datetime
+    remarks : str
     class Config:
         from_attributes = True
 
