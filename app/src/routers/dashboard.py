@@ -140,7 +140,9 @@ async def product_type_wise_service_data(day_count : Optional[int] = 30, db: Ses
     # Execute and fetch results
     results = query.all()
     data = []
+    total = 0
     for count, name in results:
+        total += count
         data.append(
             {
                 "label": name,
@@ -150,6 +152,6 @@ async def product_type_wise_service_data(day_count : Optional[int] = 30, db: Ses
 
 
     return {"status": "success", "statusCode": 200, "message" : "Successfully got product type wise service graph data",
-            "total" : query.count(),
+            "total" : total,
             "data": data
             }
