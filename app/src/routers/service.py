@@ -764,7 +764,7 @@ async def get_complaints(organization_id : Optional[int] = None,
 
 
     total_complaints = query.count()
-    query.limit((page - 1) * limit)
+    query.offset((page - 1) * limit).limit(limit)
 
     total_page = math.ceil(total_complaints/limit)
 
