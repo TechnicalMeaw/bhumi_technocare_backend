@@ -90,7 +90,7 @@ async def receive_credit_payment(bill_id : int, db: Session = Depends(get_db),
 
 
 @router.get('/approve', response_model=schemas.CommonResponseModel)
-async def approve(bill_id : int, gst_bill_number : Optional[str] = Form(None), db: Session = Depends(get_db), 
+async def approve(bill_id : int, gst_bill_number : Optional[str] = None, db: Session = Depends(get_db), 
                  current_user : models.User = Depends(oauth2.get_current_user)):
     bill = db.query(models.Bill).filter(models.Bill.id == bill_id).first()
     if not bill:
