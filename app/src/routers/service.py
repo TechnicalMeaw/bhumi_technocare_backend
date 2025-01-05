@@ -236,6 +236,96 @@ async def add_firm(     name : Annotated[str, Form()],
     return {"status": "success", "statusCode": 201, "message" : "Organization Created"}
 
 
+@router.put("/edit_firm", response_model=schemas.CommonResponseModel)
+async def edit_firm( firm_id : int = Form(...),
+                        name : Optional[str] = Form(None),
+                        address : Optional[str] = Form(None),
+                        area_id : Optional[int] = Form(None),
+                        city_id : Optional[int] = Form(None),
+                        mobile_no : Optional[str] = Form(None),
+                        contact_person_name : Optional[str] = Form(None),
+                        pincode : Optional[str] = Form(None),
+                        gst_no : Optional[str] = File(None),
+                        remarks : Optional[str] = Form(None),
+                        photo : Optional[UploadFile] = File(None),
+
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+    
+    firm = db.query(models.Firm).filter(models.Firm.id == firm_id).first()
+
+    if not firm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Firm id")
+    
+    if name:
+        firm.name = name
+    if address:
+        firm.address = address
+    if mobile_no:
+        firm.contact_no = mobile_no
+    if contact_person_name:
+        firm.contact_person = contact_person_name
+    if pincode:
+        firm.pincode = pincode
+    if gst_no:
+        firm.gst_no = gst_no
+    if remarks:
+        firm.remarks = remarks
+
+    # Optional
+    if area_id:
+        area = db.query(models.Area).filter(models.Area.id == area_id, models.Area.is_active == True).first()
+        if not area:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid area id")
+        firm.area = area.id
+
+    # Optional
+    if city_id:
+        city = db.query(models.City).filter(models.City.id == city_id, models.City.is_active == True).first()
+        if not city:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid city id")
+        firm.area = city.id
+
+    # Optional
+    if photo:
+        try:
+            if firm.photo:
+                await blob.delete_file(firm.photo)
+            res = await blob.upload_file(photo)
+            firm.photo = res['firebase_url']
+        except Exception:
+            pass
+
+    db.commit()
+
+    return {"status": "success", "statusCode": 200, "message" : "Organization Updated"}
+
+
+@router.delete("/delete_firm", response_model=schemas.CommonResponseModel)
+async def delete_firm( firm_id : int,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete organization")
+    
+    firm = db.query(models.Firm).filter(models.Firm.id == firm_id).first()
+    if not firm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid firm id")
+    
+    is_used = db.query(models.Complaint).filter(models.Complaint.organization == firm.id)
+    if is_used:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organization is already in use")
+    db.delete(firm)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Organization Deleted"}
+
 @router.post("/add_customer", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
 async def add_customer(     name : Annotated[str, Form()],
                         address : Annotated[str, Form()],

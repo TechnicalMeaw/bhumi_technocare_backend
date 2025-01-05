@@ -43,7 +43,7 @@ async def get_engineers_list(is_active : Optional[bool] = None, page : Optional[
     # Else take the provided limit ----> Calculate the total page accordingly
     if page and page > 0:
         offset = (page - 1) * (limit if limit and limit > 0 else 10)
-        query.limit(offset)
+        query.offset(offset).limit(limit if limit and limit > 0 else 10)
 
         total_page = math.ceil(total_users/(limit if limit and limit > 0 else 10))
 
