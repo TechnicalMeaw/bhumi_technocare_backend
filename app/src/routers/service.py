@@ -318,7 +318,7 @@ async def delete_firm( firm_id : int,
     if not firm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid firm id")
     
-    is_used = db.query(models.Complaint).filter(models.Complaint.organization == firm.id)
+    is_used = db.query(models.Complaint).filter(models.Complaint.firm_id == firm.id)
     if is_used:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organization is already in use")
     db.delete(firm)
@@ -342,7 +342,7 @@ async def add_customer(     name : Annotated[str, Form()],
                         ):
     
     if current_user.role != 2:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create complaints")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can create customers")
     
     new_customer = models.Customer(name = name, 
                                    contact_no = mobile_no, 
@@ -384,6 +384,96 @@ async def add_customer(     name : Annotated[str, Form()],
     return {"status": "success", "statusCode": 201, "message" : "Customer Created"}
 
 
+@router.put("/edit_customer", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
+async def edit_customer( customer_id : Annotated[str, Form()],
+                        name : Optional[str] = Form(None),
+                        address : Optional[str] = Form(None),
+                        mobile_no : Optional[str] = Form(None),
+                        area_id : Optional[int] = Form(None),
+                        city_id : Optional[int] = Form(None),
+                        depertment : Optional[str] = Form(None),
+                        organization_id : Optional[int] = Form(None),
+                        remarks : Optional[str] = Form(None),
+                        photo : Optional[UploadFile] = File(None),
+
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can edit customers")
+    
+    customer = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Customer id")
+    
+    if name:
+        customer.name = name
+    if address:
+        customer.address = address
+    if mobile_no:
+        customer.contact_no = mobile_no
+    if depertment:
+        customer.depertment = depertment
+    if remarks:
+        customer.remarks = remarks
+    
+    # Optional
+    if area_id:
+        area = db.query(models.Area).filter(models.Area.id == area_id, models.Area.is_active == True).first()
+        if not area:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid area id")
+        customer.area = area.id
+
+    # Optional
+    if city_id:
+        city = db.query(models.City).filter(models.City.id == city_id, models.City.is_active == True).first()
+        if not city:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid city id")
+        customer.area = city.id
+    
+    # Optional
+    if organization_id:
+        firm = db.query(models.Firm).filter(models.Firm.id == organization_id, models.Firm.is_active == True).first()
+        if not firm:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid organization id")
+        customer.firm_id = firm.id
+
+    # Optional
+    if photo:
+        try:
+            if customer.photo:
+                await blob.delete_file(customer.photo)
+            res = await blob.upload_file(photo)
+            customer.photo = res['firebase_url']
+        except Exception:
+            pass
+
+    db.commit()
+    return {"status": "success", "statusCode": 201, "message" : "Customer Updated"}
+
+
+@router.delete("/delete_customer", response_model=schemas.CommonResponseModel)
+async def delete_customer( customer_id : int,
+                        db: Session = Depends(get_db), 
+                        current_user : models.User = Depends(oauth2.get_current_user)
+                        ):
+    
+    if current_user.role != 2:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can delete customer")
+    
+    customer = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid customer id")
+    
+    is_used = db.query(models.Complaint).filter(models.Complaint.customer_id == customer.id)
+    if is_used:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Customer is already in use")
+    db.delete(customer)
+    db.commit()
+    
+    return {"status": "success", "statusCode": 200, "message" : "Customer Deleted"}
 
 @router.post("/add_area", status_code=status.HTTP_201_CREATED, response_model=schemas.CommonResponseModel)
 async def add_area( body : schemas.CreateAreaRequestModel,
