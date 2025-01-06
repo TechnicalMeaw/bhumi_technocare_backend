@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from .. import schemas, models, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from app.src.firebase import storage as blob
 from sqlalchemy.sql import func
@@ -85,12 +85,12 @@ async def approve(attendance_id : int,
 
 
 @router.get("/get_all", response_model= schemas.AllAttendanceResponseModel)
-async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] = None, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
+async def get_all(is_approved: Optional[bool] = None, day_count : Optional[int] = 7, page : Optional[int] = 1, limit : Optional[int] = 10, search : Optional[str] = "", db: Session = Depends(get_db), 
                         current_user : models.User = Depends(oauth2.get_current_user)):
     query = (
         db.query(models.Attendance)
         .join(models.User, models.Attendance.user)
-        .filter(models.User.name.ilike(f'%{search}%'))
+        .filter(models.Attendance.created_at > (datetime.now() - timedelta(days=day_count)).date(), models.User.name.ilike(f'%{search}%'))
         .order_by(models.Attendance.created_at.desc())
         .options(joinedload(models.Attendance.user))  # Eager load the user relationship
     )
@@ -101,9 +101,6 @@ async def get_all(is_approved: Optional[bool] = None, date : Optional[datetime] 
         query = query.filter(models.Attendance.is_approved == True)
     elif is_approved is False:
         query = query.filter(models.Attendance.is_approved == False)
-
-    if date:
-        query = query.filter(func.date(models.Attendance.created_at) == date.date())
 
     total_attendance = query.count()
 
