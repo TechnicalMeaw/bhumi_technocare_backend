@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy import func, case, and_, desc
+from sqlalchemy import func, case, and_, desc, or_
 from .. import schemas, models, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload, aliased
@@ -135,14 +135,14 @@ async def get_status(db: Session = Depends(get_db),
                 "attendance_status" : 1 if existing_attendance.is_clock_in else 0, "last_recorded" : existing_attendance.created_at}
 
 
-
-@router.get("/leaderboard")
+@router.get("/leaderboard", response_model=schemas.AllEngineerAttendanceHoursResponseModel)
 async def get_leaderboard(
     day_count: int = 7,
     search: str = "",
     page: int = 1,
     limit: int = 10,
     db: Session = Depends(get_db),
+    current_user : models.User = Depends(oauth2.get_current_user)
 ):
     # Calculate the start date
     start_date = (datetime.now() - timedelta(days=day_count)).date()
@@ -209,12 +209,12 @@ async def get_leaderboard(
     # Main query to include all users and their total service time
     query = (
         db.query(
-            models.User.id.label("user_id"),
-            models.User.name.label("user_name"),
+            models.User,  # Fetch the whole User object
             func.coalesce(total_service_time_query.c.total_service_time, 0).label("service_time"),
         )
         .outerjoin(total_service_time_query, models.User.id == total_service_time_query.c.user_id)
-        .filter(models.User.name.ilike(f"%{search}%"))
+        .filter(or_(models.User.name.ilike(f"%{search}%"),
+                    models.User.phone_no.ilike(f"%{search}%")))
         .order_by(desc("service_time"))
     )
 
@@ -235,9 +235,8 @@ async def get_leaderboard(
         "next_page": page + 1 if page * limit < total_count else None,
         "data": [
             {
-                "user_id": row.user_id,
-                "user_name": row.user_name,
-                "service_time": row.service_time / 3600,  # Convert seconds to hours
+                "user": row.User,  # Return the whole User object
+                "service_time_in_seconds": row.service_time  # Convert seconds to hours
             }
             for row in results
         ],

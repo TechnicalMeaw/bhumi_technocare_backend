@@ -243,3 +243,10 @@ class ExpenceResponseModel(BaseModel):
 
 class AllExpenceResponseModel(CommonResponseModel, PaginationResponseModel):
     data : List[ExpenceResponseModel]
+
+class EngineerAttendanceHoursResponse(BaseModel):
+    user : UserQuickDetailResponseModel
+    service_time_in_seconds : int
+
+class AllEngineerAttendanceHoursResponseModel(BaseModel):
+    data: List[EngineerAttendanceHoursResponse]
