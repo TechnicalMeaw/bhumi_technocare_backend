@@ -318,7 +318,7 @@ async def delete_firm( firm_id : int,
     if not firm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid firm id")
     
-    is_used = db.query(models.Complaint).filter(models.Complaint.firm_id == firm.id)
+    is_used = db.query(models.Complaint).filter(models.Complaint.firm_id == firm.id).first()
     if is_used:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organization is already in use")
     db.delete(firm)
@@ -467,7 +467,7 @@ async def delete_customer( customer_id : int,
     if not customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid customer id")
     
-    is_used = db.query(models.Complaint).filter(models.Complaint.customer_id == customer.id)
+    is_used = db.query(models.Complaint).filter(models.Complaint.customer_id == customer.id).first()
     if is_used:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Customer is already in use")
     db.delete(customer)
