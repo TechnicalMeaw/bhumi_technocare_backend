@@ -899,6 +899,51 @@ async def get_customers(organization_id : Optional[int] = None, is_active : Opti
 
 
 
+@router.get("/customers_data_list", response_model = schemas.AllCustomerDataResponseModel)
+async def customers_data_list(organization_id : Optional[int] = None, is_active : Optional[bool] = None, page : Optional[int] = None, limit : Optional[int] = None, search : Optional[str] = "", db: Session = Depends(get_db), 
+                    current_user : models.User = Depends(oauth2.get_current_user)):
+    query = db.query(models.Customer).filter(or_(
+        cast(models.Customer.name, String).ilike(f'%{search}%'),
+        cast(models.Customer.contact_no, String).ilike(f'%{search}%'))
+        ).order_by(models.Customer.created_at.desc())
+
+    if organization_id:
+        query = query.filter(models.Customer.firm_id == organization_id)
+
+    if is_active is not None:
+        query = query.filter(models.Customer.is_active == is_active)
+
+    total_customer = query.count()
+
+    # By default the limit is `None`
+    # If limit is positive -> set the limit
+    if limit and limit > 0:
+        query.limit(limit)
+
+    # By default pagination is not implemented
+    # So the total page count will be -> `1``
+    total_page = 1
+
+    # If page number is provided and is positive
+    # Means pagination is requested ---->
+    # If limit is not provided, then set it to -> `10`
+    # Else take the provided limit ----> Calculate the total page accordingly
+    if page and page > 0:
+        offset = (page - 1) * (limit if limit and limit > 0 else 10)
+        query.limit(offset)
+
+        total_page = math.ceil(total_customer/(limit if limit and limit > 0 else 10))
+
+    return {"status": "success", "statusCode": 200, "message" : "Successfully got customers", 
+            "total_count": total_customer,
+            "current_page": page,
+            "total_page": total_page,
+            "prev_page": page-1 if page and page > 1 else None, 
+            "next_page": page+1 if page and page < total_page else None,
+            "data": query.all()}
+
+
+
 @router.get("/complaints", response_model=schemas.ServiceResponseModel)
 async def get_complaints(organization_id : Optional[int] = None, 
                          customer_id : Optional [int] = None,
