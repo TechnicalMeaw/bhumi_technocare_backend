@@ -250,3 +250,8 @@ class EngineerAttendanceHoursResponse(BaseModel):
 
 class AllEngineerAttendanceHoursResponseModel(BaseModel):
     data: List[EngineerAttendanceHoursResponse]
+
+
+# Organization full model
+class AllOrganizationDataResponseModel(CommonResponseModel, PaginationResponseModel):
+    data : OrganizationModel
