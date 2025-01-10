@@ -157,6 +157,7 @@ class CustomerModel(BaseModel):
     name : str
     address : str
     contact_no : str
+    firm_id : int | None
     area_rel : AreaResponseModel | None
     city_rel : AreaResponseModel | None
     depertment : str | None
