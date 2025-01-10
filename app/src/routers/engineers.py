@@ -105,7 +105,15 @@ async def update_engineer_details(user_id : Annotated[int, Form()],
     if address and address.strip() != "":
         user.address = address
     if phone_no and phone_no.strip() != "":
-        user.phone_no = phone_no
+        country_code, phone = utils.split_phone_number(phone_no)
+        # if phone number without country code or invalid phone number
+        if not phone or not country_code:
+            user.phone_no = phone_no
+        else:
+           # If proper phone number with country code
+           user.country_code = country_code
+           user.phone_no = phone
+
     if dob and dob.strip() != "":
         user.dob = dob
     if blood_group and blood_group.strip != "":
