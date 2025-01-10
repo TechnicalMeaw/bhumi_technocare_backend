@@ -556,7 +556,7 @@ async def delete_product_type( product_type_id : int,
     if not product_type:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid product type id")
     
-    is_used = db.query(models.Complaint).filter(models.Complaint.product_type_id == product_type.id)
+    is_used = db.query(models.Complaint).filter(models.Complaint.product_type_id == product_type.id).first()
     if is_used:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Product type is already in use")
     db.delete(product_type)
@@ -610,7 +610,7 @@ async def delete_service_type( service_type_id : int,
     if not service_type:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid service type id")
     
-    is_used = db.query(models.Complaint).filter(models.Complaint.service_type_id == service_type.id)
+    is_used = db.query(models.Complaint).filter(models.Complaint.service_type_id == service_type.id).first()
     if is_used:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Service type is already in use")
     
