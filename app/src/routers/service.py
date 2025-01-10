@@ -220,7 +220,7 @@ async def add_firm(     name : Annotated[str, Form()],
         city = db.query(models.City).filter(models.City.id == city_id, models.City.is_active == True).first()
         if not city:
             raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Invalid city id")
-        new_firm.area = city.id
+        new_firm.city = city.id
 
     # Optional
     if photo:
