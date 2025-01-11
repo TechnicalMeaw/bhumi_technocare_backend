@@ -213,7 +213,7 @@ async def get_leaderboard(
             func.coalesce(total_service_time_query.c.total_service_time, 0).label("service_time"),
         )
         .outerjoin(total_service_time_query, models.User.id == total_service_time_query.c.user_id)
-        .filter(or_(models.User.name.ilike(f"%{search}%"),
+        .filter(models.User.role == 1, or_(models.User.name.ilike(f"%{search}%"),
                     models.User.phone_no.ilike(f"%{search}%")))
         .order_by(desc("service_time"))
     )
