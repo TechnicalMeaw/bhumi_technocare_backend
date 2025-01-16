@@ -30,7 +30,10 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
         db.add(new_session)
         db.commit()
     elif existing_session.is_active:
-        if existing_session.device_id != user_credentials.client_id:
+        if user.role == 2:
+            existing_session.device_id = user_credentials.client_id
+            db.commit()
+        elif existing_session.device_id != user_credentials.client_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Existing user session in another device")
     else:
         existing_session.device_id = user_credentials.client_id
